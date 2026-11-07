@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua Script Unlocker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #000000; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background-color: #0a0a0a; border: 1px solid #262626; padding: 35px; border-radius: 12px; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.03); width: 100%; max-width: 480px; text-align: center; }
+        h2 { margin-bottom: 10px; color: #ffffff; font-size: 22px; font-weight: 600; letter-spacing: 0.5px; }
+        p { color: #888888; margin-bottom: 25px; font-size: 14px; line-height: 1.5; }
+        .step-box { display: none; }
+        .step-box.active { display: block; }
+        .btn { background-color: #ffffff; color: #000000; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s ease; width: 100%; font-weight: 600; margin-bottom: 12px; text-decoration: none; display: inline-block; }
+        .btn:hover { background-color: #e0e0e0; }
+        .btn-outline { background-color: transparent; color: #ffffff; border: 1px solid #404040; }
+        .btn-outline:hover:not(:disabled) { background-color: #1a1a1a; border-color: #ffffff; }
+        .btn:disabled { background-color: #141414; color: #555555; border-color: #222222; cursor: not-allowed; }
+        .input-code { width: 100%; background-color: #050505; color: #ffffff; border: 1px solid #333333; border-radius: 8px; padding: 12px; font-size: 16px; text-align: center; letter-spacing: 2px; margin-bottom: 15px; outline: none; transition: border-color 0.2s; }
+        .input-code:focus { border-color: #ffffff; }
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 8px; background-color: #141414; color: #888888; border: 1px solid #333333; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .tab-btn.active-tab { background-color: #ffffff; color: #000000; border-color: #ffffff; }
+        .tab-content { display: none; }
+        .tab-content.active-content { display: block; }
+        textarea { width: 100%; height: 140px; background-color: #050505; color: #cccccc; border: 1px solid #333333; border-radius: 8px; padding: 12px; font-family: monospace; resize: none; margin-bottom: 15px; font-size: 13px; }
+        .action-btns { display: flex; gap: 10px; }
+        .error-msg { color: #ff5555; font-size: 13px; margin-top: -8px; margin-bottom: 15px; display: none; }
+        .alert { margin-top: 10px; font-size: 12px; color: #ffffff; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="mainContainer">
+        <h2 id="loadingText">Loading Script...</h2>
+    </div>
+
+    <script>
+        const PASTE_BIN_ID = "6aef24a9ac6210605a7541d0";
+        const MASTER_KEY = "$2a$10$7kUozSyzkNytbUxnN7/kv.xInV14ItUgvNAWdjKEswZ0M.DDWgL/e";
+
+        let CORRECT_CODE = "ENTROPY??";
+        let targetDiscordLink = "https://discord.gg/tAd4tYUE";
+        let rawScriptText = "";
+
+        // Ambil parameter ID dari URL (contoh: view.html?id=paste_xyz)
+        const urlParams = new URLSearchParams(window.location.search);
+        const pasteId = urlParams.get('id');
+
+        async function fetchPasteData() {
+            const container = document.getElementById('mainContainer');
+            if (!pasteId) {
+                container.innerHTML = `<h2>Error</h2><p style="color:#ff5555;">No script ID specified in the URL.</p>`;
+                return;
+            }
+
+            try {
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${PASTE_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                let data = await res.json();
+                let pastes = data.record || [];
+
+                let currentPaste = pastes.find(p => p.id === pasteId);
+
+                if (!currentPaste) {
+                    container.innerHTML = `<h2>Not Found</h2><p style="color:#ff5555;">The requested script does not exist or has been removed.</p>`;
+                    return;
+                }
+
+                // Masukkan data dinamis dari pembuat pastebin
+                CORRECT_CODE = currentPaste.code;
+                targetDiscordLink = currentPaste.discord;
+                rawScriptText = currentPaste.script;
+
+                // Render UI Unlocker asli yang kamu inginkan
+                container.innerHTML = `
+                    <!-- STEP 1: JOIN DISCORD -->
+                    <div id="step-1" class="step-box active">
+                        <h2>Step 1 of 2</h2>
+                        <p>Join our Discord server to find the hidden access code inside one of the channels.</p>
+                        <a href="${targetDiscordLink}" target="_blank" class="btn" onclick="unlockStep2()">Join Discord Server</a>
+                        <button class="btn btn-outline" id="next-to-2" disabled onclick="goToStep2()">Next: Enter Code</button>
+                    </div>
+
+                    <!-- STEP 2: ENTER CODE -->
+                    <div id="step-2" class="step-box">
+                        <h2>Step 2 of 2</h2>
+                        <p>Enter the secret code you found on Discord to unlock the script.</p>
+                        <input type="text" id="secret-code-input" class="input-code" placeholder="ENTER CODE">
+                        <p id="error-alert" class="error-msg">Incorrect code, please check again on Discord.</p>
+                        <button class="btn" onclick="verifyCode()">Verify Code</button>
+                    </div>
+
+                    <!-- STEP 3: UNLOCKED -->
+                    <div id="step-3" class="step-box">
+                        <h2>Script Unlocked</h2>
+                        <p>Verification successful. Choose your format below.</p>
+                        
+                        <div class="tab-buttons">
+                            <button class="tab-btn active-tab" onclick="switchTab('loadstring')">Loadstring</button>
+                            <button class="tab-btn" onclick="switchTab('lua')">Raw Lua</button>
+                        </div>
+
+                        <div id="content-loadstring" class="tab-content active-content">
+                            <textarea id="loadstring-code" readonly>loadstring(game:HttpGet(window.location.href))()</textarea>
+                            <div class="action-btns">
+                                <button class="btn" onclick="copyLoadstringCode()">Copy Loadstring</button>
+                            </div>
+                        </div>
+
+                        <div id="content-lua" class="tab-content">
+                            <textarea id="lua-code" readonly>${rawScriptText}</textarea>
+                            <div class="action-btns">
+                                <button class="btn" onclick="copyLuaCode()">Copy Script</button>
+                                <button class="btn btn-outline" onclick="downloadLuaCode()">Download</button>
+                            </div>
+                        </div>
+
+                        <p id="copy-alert" class="alert">Successfully copied to clipboard.</p>
+                    </div>
+                `;
+
+                // Set loadstring otomatis mengarah ke halaman ini atau URL raw
+                document.getElementById('loadstring-code').value = `loadstring(game:HttpGet("${window.location.href}"))()`;
+
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<h2>Connection Error</h2><p style="color:#ff5555;">Failed to load script data from server.</p>`;
+            }
+        }
+
+        function unlockStep2() {
+            setTimeout(() => {
+                document.getElementById('next-to-2').disabled = false;
+            }, 1000);
+        }
+
+        function goToStep2() {
+            document.getElementById('step-1').classList.remove('active');
+            document.getElementById('step-2').classList.add('active');
+        }
+
+        function verifyCode() {
+            const codeInput = document.getElementById('secret-code-input');
+            const errorAlert = document.getElementById('error-alert');
+            const userInputValue = codeInput.value.trim();
+            
+            if (userInputValue === CORRECT_CODE) {
+                errorAlert.style.display = 'none';
+                document.getElementById('step-2').classList.remove('active');
+                document.getElementById('step-3').classList.add('active');
+            } else {
+                errorAlert.style.display = 'block';
+                codeInput.style.borderColor = '#ff5555';
+            }
+        }
+
+        function switchTab(tabName) {
+            const tabLua = document.getElementById('content-lua');
+            const tabLoadstring = document.getElementById('content-loadstring');
+            const btnLoadstring = document.querySelectorAll('.tab-btn')[0];
+            const btnLua = document.querySelectorAll('.tab-btn')[1];
+
+            if (tabName === 'loadstring') {
+                tabLoadstring.classList.add('active-content');
+                tabLua.classList.remove('active-content');
+                btnLoadstring.classList.add('active-tab');
+                btnLua.classList.remove('active-tab');
+            } else {
+                tabLua.classList.add('active-content');
+                tabLoadstring.classList.remove('active-content');
+                btnLua.classList.add('active-tab');
+                btnLoadstring.classList.remove('active-tab');
+            }
+        }
+
+        function showAlert() {
+            const alertBox = document.getElementById('copy-alert');
+            alertBox.style.display = 'block';
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 2000);
+        }
+
+        function copyText(elementId) {
+            const textArea = document.getElementById(elementId);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showAlert();
+            } catch (err) {
+                navigator.clipboard.writeText(textArea.value).then(() => {
+                    showAlert();
+                });
+            }
+            window.getSelection().removeAllRanges();
+        }
+
+        function copyLoadstringCode() { copyText('loadstring-code'); }
+        function copyLuaCode() { copyText('lua-code'); }
+
+        function downloadLuaCode() {
+            const blob = new Blob([rawScriptText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'script.lua';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        window.onload = fetchPasteData;
+    </script>
+</body>
+</html>
