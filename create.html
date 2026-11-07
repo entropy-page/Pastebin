@@ -12,7 +12,7 @@
         p { color: #888888; margin-bottom: 20px; font-size: 13px; text-align: center; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-size: 13px; color: #ccc; }
-        input, textarea { width: 100%; background-color: #050505; color: #ffffff; border: 1px solid #333333; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; }
+        input, textarea { width: 100%; background-color: #050505; color: #ffffff; border: 1px solid #333333; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; box-sizing: border-box; }
         input:focus, textarea:focus { border-color: #ffffff; }
         textarea { height: 160px; font-family: monospace; resize: none; }
         .btn { background-color: #ffffff; color: #000000; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 10px; transition: 0.2s; }
@@ -54,8 +54,7 @@
     </div>
 
     <script>
-        // Kita pakai satu bin atau database penampung pastebin umum (bisa pakai QUEUE_BIN_ID atau buat Bin baru khusus pastebin)
-        const PASTE_BIN_ID = "6aef24a9ac6210605a7541d0"; // Atau buat bin baru khusus paste
+        const PASTE_BIN_ID = "6aef79e5ffd5d16053afa5ec"; 
         const MASTER_KEY = "$2a$10$7kUozSyzkNytbUxnN7/kv.xInV14ItUgvNAWdjKEswZ0M.DDWgL/e";
 
         async function createPaste(event) {
@@ -69,8 +68,7 @@
             submitBtn.disabled = true;
 
             try {
-                // Buat ID unik berdasarkan waktu
-                let pasteId = 'paste_' + Math.random().toString(36.substring(2, 9));
+                let pasteId = 'paste_' + Math.random().toString(36).substring(2, 9);
 
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${PASTE_BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': MASTER_KEY }
@@ -79,7 +77,6 @@
                 let pastes = data.record || [];
                 if (!Array.isArray(pastes)) pastes = [];
 
-                // Simpan data paste baru ke array
                 pastes.unshift({
                     id: pasteId,
                     code: secretCode,
@@ -94,7 +91,6 @@
                 });
 
                 if (putRes.ok) {
-                    // Buat link menuju halaman view.html dengan parameter id
                     let fullUrl = window.location.origin + window.location.pathname.replace('create.html', 'view.html') + '?id=' + pasteId;
                     document.getElementById('generatedLink').value = fullUrl;
                     document.getElementById('resultBox').style.display = 'block';
@@ -106,7 +102,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert('Connection error.');
+                alert('Connection error or invalid Bin ID.');
                 submitBtn.innerText = "Generate Pastebin Link 🚀";
                 submitBtn.disabled = false;
             }
