@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Lua Pastebin - Entropy Hub</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #000000; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .container { background-color: #0a0a0a; border: 1px solid #262626; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(255, 255, 255, 0.03); width: 100%; max-width: 520px; }
+        h2 { margin-bottom: 8px; color: #ffffff; font-size: 22px; font-weight: 600; text-align: center; }
+        p { color: #888888; margin-bottom: 20px; font-size: 13px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; color: #ccc; }
+        input, textarea { width: 100%; background-color: #050505; color: #ffffff; border: 1px solid #333333; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; }
+        input:focus, textarea:focus { border-color: #ffffff; }
+        textarea { height: 160px; font-family: monospace; resize: none; }
+        .btn { background-color: #ffffff; color: #000000; border: none; padding: 12px; border-radius: 8px; font-size: 14px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 10px; transition: 0.2s; }
+        .btn:hover { background-color: #e0e0e0; }
+        .result-box { margin-top: 20px; display: none; background: #141414; padding: 15px; border-radius: 8px; border: 1px solid #333; text-align: center; }
+        .result-box input { background: #000; text-align: center; margin-bottom: 10px; color: #38bdf8; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Create Lua Pastebin</h2>
+        <p>Generate your protected script page with custom Discord verification.</p>
+        
+        <form id="createForm" onsubmit="createPaste(event)">
+            <div class="form-group">
+                <label>Secret Code (Required on Discord):</label>
+                <input type="text" id="secretCode" placeholder="e.g. ENTROPY??" required>
+            </div>
+
+            <div class="form-group">
+                <label>Discord Invite Link:</label>
+                <input type="text" id="discordLink" placeholder="https://discord.gg/..." required>
+            </div>
+
+            <div class="form-group">
+                <label>Lua Script Content:</label>
+                <textarea id="scriptContent" placeholder="print('Hello World!')" required></textarea>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">Generate Pastebin Link 🚀</button>
+        </form>
+
+        <div id="resultBox" class="result-box">
+            <p style="color: #4ade80; margin-bottom: 8px;">Success! Your link has been generated:</p>
+            <input type="text" id="generatedLink" readonly>
+            <button class="btn" style="background: #38bdf8; color: #000;" onclick="copyLink()">Copy Link</button>
+        </div>
+    </div>
+
+    <script>
+        // Kita pakai satu bin atau database penampung pastebin umum (bisa pakai QUEUE_BIN_ID atau buat Bin baru khusus pastebin)
+        const PASTE_BIN_ID = "6aef24a9ac6210605a7541d0"; // Atau buat bin baru khusus paste
+        const MASTER_KEY = "$2a$10$7kUozSyzkNytbUxnN7/kv.xInV14ItUgvNAWdjKEswZ0M.DDWgL/e";
+
+        async function createPaste(event) {
+            event.preventDefault();
+            let secretCode = document.getElementById('secretCode').value.trim();
+            let discordLink = document.getElementById('discordLink').value.trim();
+            let scriptContent = document.getElementById('scriptContent').value;
+            let submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.innerText = "Generating...";
+            submitBtn.disabled = true;
+
+            try {
+                // Buat ID unik berdasarkan waktu
+                let pasteId = 'paste_' + Math.random().toString(36.substring(2, 9));
+
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${PASTE_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': MASTER_KEY }
+                });
+                let data = await res.json();
+                let pastes = data.record || [];
+                if (!Array.isArray(pastes)) pastes = [];
+
+                // Simpan data paste baru ke array
+                pastes.unshift({
+                    id: pasteId,
+                    code: secretCode,
+                    discord: discordLink,
+                    script: scriptContent
+                });
+
+                let putRes = await fetch(`https://api.jsonbin.io/v3/b/${PASTE_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+                    body: JSON.stringify(pastes)
+                });
+
+                if (putRes.ok) {
+                    // Buat link menuju halaman view.html dengan parameter id
+                    let fullUrl = window.location.origin + window.location.pathname.replace('create.html', 'view.html') + '?id=' + pasteId;
+                    document.getElementById('generatedLink').value = fullUrl;
+                    document.getElementById('resultBox').style.display = 'block';
+                    submitBtn.innerText = "Generated Successfully! 🎉";
+                } else {
+                    alert('Failed to generate paste.');
+                    submitBtn.innerText = "Generate Pastebin Link 🚀";
+                    submitBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error.');
+                submitBtn.innerText = "Generate Pastebin Link 🚀";
+                submitBtn.disabled = false;
+            }
+        }
+
+        function copyLink() {
+            let linkInput = document.getElementById('generatedLink');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+    </script>
+</body>
+</html>
