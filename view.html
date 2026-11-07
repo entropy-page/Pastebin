@@ -19,12 +19,7 @@
         .btn:disabled { background-color: #141414; color: #555555; border-color: #222222; cursor: not-allowed; }
         .input-code { width: 100%; background-color: #050505; color: #ffffff; border: 1px solid #333333; border-radius: 8px; padding: 12px; font-size: 16px; text-align: center; letter-spacing: 2px; margin-bottom: 15px; outline: none; transition: border-color 0.2s; }
         .input-code:focus { border-color: #ffffff; }
-        .tab-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 8px; background-color: #141414; color: #888888; border: 1px solid #333333; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
-        .tab-btn.active-tab { background-color: #ffffff; color: #000000; border-color: #ffffff; }
-        .tab-content { display: none; }
-        .tab-content.active-content { display: block; }
-        textarea { width: 100%; height: 140px; background-color: #050505; color: #cccccc; border: 1px solid #333333; border-radius: 8px; padding: 12px; font-family: monospace; resize: none; margin-bottom: 15px; font-size: 13px; }
+        textarea { width: 100%; height: 180px; background-color: #050505; color: #cccccc; border: 1px solid #333333; border-radius: 8px; padding: 12px; font-family: monospace; resize: none; margin-bottom: 15px; font-size: 13px; box-sizing: border-box; }
         .action-btns { display: flex; gap: 10px; }
         .error-msg { color: #ff5555; font-size: 13px; margin-top: -8px; margin-bottom: 15px; display: none; }
         .alert { margin-top: 10px; font-size: 12px; color: #ffffff; display: none; }
@@ -90,36 +85,21 @@
                         <button class="btn" onclick="verifyCode()">Verify Code</button>
                     </div>
 
-                    <!-- STEP 3: UNLOCKED -->
+                    <!-- STEP 3: UNLOCKED (RAW LUA ONLY) -->
                     <div id="step-3" class="step-box">
                         <h2>Script Unlocked</h2>
-                        <p>Verification successful. Choose your format below.</p>
+                        <p>Verification successful. Your Lua script is ready below.</p>
                         
-                        <div class="tab-buttons">
-                            <button class="tab-btn active-tab" onclick="switchTab('loadstring')">Loadstring</button>
-                            <button class="tab-btn" onclick="switchTab('lua')">Raw Lua</button>
-                        </div>
-
-                        <div id="content-loadstring" class="tab-content active-content">
-                            <textarea id="loadstring-code" readonly>loadstring(game:HttpGet(window.location.href))()</textarea>
-                            <div class="action-btns">
-                                <button class="btn" onclick="copyLoadstringCode()">Copy Loadstring</button>
-                            </div>
-                        </div>
-
-                        <div id="content-lua" class="tab-content">
-                            <textarea id="lua-code" readonly>${rawScriptText}</textarea>
-                            <div class="action-btns">
-                                <button class="btn" onclick="copyLuaCode()">Copy Script</button>
-                                <button class="btn btn-outline" onclick="downloadLuaCode()">Download</button>
-                            </div>
+                        <textarea id="lua-code" readonly>${rawScriptText}</textarea>
+                        
+                        <div class="action-btns">
+                            <button class="btn" onclick="copyLuaCode()">Copy Script</button>
+                            <button class="btn btn-outline" onclick="downloadLuaCode()">Download .lua</button>
                         </div>
 
                         <p id="copy-alert" class="alert">Successfully copied to clipboard.</p>
                     </div>
                 `;
-
-                document.getElementById('loadstring-code').value = `loadstring(game:HttpGet("${window.location.href}"))()`;
 
             } catch (err) {
                 console.error(err);
@@ -153,25 +133,6 @@
             }
         }
 
-        function switchTab(tabName) {
-            const tabLua = document.getElementById('content-lua');
-            const tabLoadstring = document.getElementById('content-loadstring');
-            const btnLoadstring = document.querySelectorAll('.tab-btn')[0];
-            const btnLua = document.querySelectorAll('.tab-btn')[1];
-
-            if (tabName === 'loadstring') {
-                tabLoadstring.classList.add('active-content');
-                tabLua.classList.remove('active-content');
-                btnLoadstring.classList.add('active-tab');
-                btnLua.classList.remove('active-tab');
-            } else {
-                tabLua.classList.add('active-content');
-                tabLoadstring.classList.remove('active-content');
-                btnLua.classList.add('active-tab');
-                btnLoadstring.classList.remove('active-tab');
-            }
-        }
-
         function showAlert() {
             const alertBox = document.getElementById('copy-alert');
             alertBox.style.display = 'block';
@@ -180,8 +141,8 @@
             }, 2000);
         }
 
-        function copyText(elementId) {
-            const textArea = document.getElementById(elementId);
+        function copyLuaCode() {
+            const textArea = document.getElementById('lua-code');
             textArea.focus();
             textArea.select();
             try {
@@ -194,9 +155,6 @@
             }
             window.getSelection().removeAllRanges();
         }
-
-        function copyLoadstringCode() { copyText('loadstring-code'); }
-        function copyLuaCode() { copyText('lua-code'); }
 
         function downloadLuaCode() {
             const blob = new Blob([rawScriptText], { type: 'text/plain' });
