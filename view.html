@@ -37,14 +37,13 @@
     </div>
 
     <script>
-        const PASTE_BIN_ID = "6aef24a9ac6210605a7541d0";
+        const PASTE_BIN_ID = "6aef79e5ffd5d16053afa5ec";
         const MASTER_KEY = "$2a$10$7kUozSyzkNytbUxnN7/kv.xInV14ItUgvNAWdjKEswZ0M.DDWgL/e";
 
         let CORRECT_CODE = "ENTROPY??";
         let targetDiscordLink = "https://discord.gg/tAd4tYUE";
         let rawScriptText = "";
 
-        // Ambil parameter ID dari URL (contoh: view.html?id=paste_xyz)
         const urlParams = new URLSearchParams(window.location.search);
         const pasteId = urlParams.get('id');
 
@@ -69,12 +68,10 @@
                     return;
                 }
 
-                // Masukkan data dinamis dari pembuat pastebin
                 CORRECT_CODE = currentPaste.code;
                 targetDiscordLink = currentPaste.discord;
                 rawScriptText = currentPaste.script;
 
-                // Render UI Unlocker asli yang kamu inginkan
                 container.innerHTML = `
                     <!-- STEP 1: JOIN DISCORD -->
                     <div id="step-1" class="step-box active">
@@ -122,7 +119,6 @@
                     </div>
                 `;
 
-                // Set loadstring otomatis mengarah ke halaman ini atau URL raw
                 document.getElementById('loadstring-code').value = `loadstring(game:HttpGet("${window.location.href}"))()`;
 
             } catch (err) {
